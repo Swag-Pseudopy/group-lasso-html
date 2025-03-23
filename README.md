@@ -9,7 +9,7 @@ This repository contains an R Markdown script and the corresponding HTML report 
 **Key Features:**
 - Demonstrates the use of the `grpreg` package for group lasso regression.
 - Includes detailed documentation and step-by-step explanations.
-- Hosted HTML report available at: `https://<username>.github.io/<repository-name>/group_lasso.html`
+- Hosted HTML report available at: `https://Swag-Pseudopy.github.io/group-lasso-html/SC_paper.html`
 
 **Technologies Used:**
 - R
