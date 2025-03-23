@@ -1,0 +1,138 @@
+---
+title: "Group Lasso with `grpreg` Package"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook demonstrating the implementation of the **group lasso** using the `grpreg` package. The group lasso is a regularization method for regression with grouped predictors, where sparsity is encouraged at the group level.
+
+## **1. Install and Load the `grpreg` Package**
+
+First, we install and load the `grpreg` package, which provides functions for fitting group lasso models.
+
+```{r install-load-package}
+# Install the grpreg package if not already installed
+if (!require('grpreg')) {
+  install.packages('grpreg')
+}
+
+# Load the grpreg package
+library(grpreg)
+```
+
+---
+
+## **2. Simulate Data**
+
+We simulate a dataset with grouped predictors. The response variable `y` is generated as a linear combination of the predictors `X` with some added noise.
+
+```{r simulate-data}
+# Set seed for reproducibility
+set.seed(123)
+
+# Number of observations
+n <- 100
+
+# Number of predictors
+p <- 10
+
+# Predictor matrix (random normal data)
+X <- matrix(rnorm(n * p), n, p)
+
+# Group structure (5 groups of size 2 each)
+groups <- c(1, 1, 2, 2, 3, 3, 4, 4, 5, 5)
+
+# True coefficients (only groups 1 and 3 are active)
+beta <- c(2, 2, 0, 0, 1, 1, 0, 0, 0, 0)
+
+# Response variable (linear combination of predictors + noise)
+y <- X %*% beta + rnorm(n)
+```
+
+---
+
+## **3. Fit the Group Lasso Model**
+
+We fit the group lasso model using the `grpreg` function. The `group` argument specifies the group structure, and the `penalty` argument specifies the group lasso penalty.
+
+```{r fit-model}
+# Fit the group lasso model
+fit <- grpreg(X, y, group = groups, penalty = "grLasso")
+
+# Display a summary of the model
+summary(fit)
+```
+
+---
+
+## **4. Visualize the Solution Path**
+
+The solution path shows how the coefficients change as the regularization parameter \( \lambda \) varies. Groups are either included or excluded as \( \lambda \) decreases.
+
+```{r plot-solution-path}
+# Plot the solution path
+plot(fit)
+```
+
+---
+
+## **5. Perform Cross-Validation**
+
+We use cross-validation to select the optimal value of the regularization parameter \( \lambda \). The `cv.grpreg` function performs cross-validation and returns the optimal \( \lambda \).
+
+```{r cross-validation}
+# Perform cross-validation
+cvfit <- cv.grpreg(X, y, group = groups, penalty = "grLasso")
+
+# Plot the cross-validation results
+plot(cvfit)
+```
+
+---
+
+## **6. Extract the Optimal Model**
+
+The optimal \( \lambda \) value and the corresponding coefficients are extracted from the cross-validation results.
+
+```{r optimal-model}
+# Optimal lambda value
+lambda_min <- cvfit$lambda.min
+cat("Optimal lambda:", lambda_min, "\n")
+
+# Coefficients at the optimal lambda
+optimal_coef <- coef(cvfit)
+print(optimal_coef)
+```
+
+---
+
+## **7. Interpretation of Results**
+
+- **Solution Path:** The plot shows how the coefficients change with \( \lambda \). Groups are either included or excluded as \( \lambda \) varies.
+- **Cross-Validation:** The plot of cross-validation results helps identify the optimal \( \lambda \) that minimizes prediction error.
+- **Optimal Model:** The coefficients at the optimal \( \lambda \) indicate which groups are selected as important predictors.
+
+---
+
+## **8. Save the Results (Optional)**
+
+The results (e.g., coefficients, optimal lambda) to a file for future reference.
+
+```{r logging}
+# Assign column names to the predictor matrix X
+colnames(X) <- paste0("X", 1:p)  # Assign names like X1, X2, ..., X10
+
+# Save the results to a CSV file
+write.csv(data.frame(
+  Predictor = colnames(X),  # Use the assigned column names
+  Coefficient = optimal_coef[-1],  # Exclude intercept
+  Lambda = lambda_min,
+  Group = groups
+), file = "group_lasso_results.csv", row.names = FALSE)
+```
+---
+
+## **References**
+
+- Breiman, L. (1995). Better subset regression using the nonnegative garrote. *Technometrics*, 37(4), 373–384.
+- Yuan, M., & Lin, Y. (2006). Model selection and estimation in regression with grouped variables. *Journal of the Royal Statistical Society: Series B*, 68(1), 49–67.
+```
